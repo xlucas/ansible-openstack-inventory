@@ -29,7 +29,7 @@ provider "ovh" {
 
   identity {
     version   = 2
-    endpoint  = "https://auth.cloud.ovh.net"
+    endpoint  = "https://auth.cloud.ovh.net" // the identity version is added by the inventory
     username  = "xxxxxxxxxxxx"
     password  = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     tenant_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

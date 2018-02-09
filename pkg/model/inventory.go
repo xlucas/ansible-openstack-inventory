@@ -7,37 +7,45 @@ import (
 )
 
 func addToGroups(p *Provider, rg *RegionGroup, r *Region, s servers.Server, inventory map[string]interface{}) {
-	groups := []string{p.Name, rg.Name, r.Name}
-
-	if str, ok := s.Metadata[p.Options.Meta.Groups]; ok {
-		userGroups := strings.Split(str.(string), ",")
-		groups = append(groups, userGroups...)
-	}
-	for _, group := range groups {
-		if _, ok := inventory[group]; !ok {
-			inventory[group] = []string{}
-		}
-		inventory[group] = append(inventory[group].([]string), s.Name)
+	defaultGroups := []string{p.Name, rg.Name, r.Name}
+	definedGroups := getDefinedGroups(p, s)
+	for _, group := range append(defaultGroups, definedGroups...) {
+		hostAdd(inventory, group, s.Name)
 	}
 }
 
 func addToVars(p *Provider, rg *RegionGroup, r *Region, s servers.Server, inventory map[string]interface{}) {
-	if inventory["_meta"] == nil {
-		inventory["_meta"] = map[string]interface{}{
-			"hostvars": map[string]interface{}{},
-		}
+	hostVarsAdd(inventory, p, r, s)
+}
+
+func getDefinedGroups(p *Provider, srv servers.Server) []string {
+	if metaValue, ok := srv.Metadata[p.Options.Meta.Groups]; ok {
+		return strings.Split(metaValue.(string), ",")
 	}
-	hostvars := inventory["_meta"].(map[string]interface{})["hostvars"].(map[string]interface{})
-	hostvars[s.Name] = map[string]interface{}{
-		"ansible_host": getIpAddress(s),
-		"ansible_user": getSSHUser(s.Image["id"].(string), p, r),
+	return nil
+}
+
+func initHostVars(inventory map[string]interface{}) {
+	inventory["_meta"] = map[string]interface{}{
+		"hostvars": map[string]interface{}{},
 	}
 }
 
-func getSSHUser(imageID string, provider *Provider, region *Region) string {
-	image := region.images[imageID]
-	if v, ok := image.Metadata[provider.Options.Meta.User]; ok {
-		return v
+func hostAdd(inventory map[string]interface{}, group, host string) {
+	if _, ok := inventory[group]; !ok {
+		inventory[group] = []string{host}
+	} else {
+		inventory[group] = append(inventory[group].([]string), host)
 	}
-	return provider.Options.FallBackUser
+}
+
+func hostVarsAdd(inventory map[string]interface{}, p *Provider, r *Region, srv servers.Server) {
+	if _, ok := inventory["_meta"]; !ok {
+		initHostVars(inventory)
+	}
+	hostvars := inventory["_meta"].(map[string]interface{})["hostvars"].(map[string]interface{})
+	hostvars[srv.Name] = map[string]interface{}{
+		"ansible_host": getAnsibleHost(srv),
+		"ansible_user": getAnsibleUser(p, r, srv),
+	}
 }

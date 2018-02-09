@@ -15,13 +15,13 @@ type Provider struct {
 }
 
 func (p *Provider) walk(client *gophercloud.ProviderClient, walkFunc func(region *Region, client *gophercloud.ProviderClient) []error) (errs []error) {
-	var group = new(sync.WaitGroup)
+	syncGroup := new(sync.WaitGroup)
 
 	for _, rg := range p.RegionGroups {
 		for _, r := range rg.Regions {
-			group.Add(1)
+			syncGroup.Add(1)
 			go func(region *Region) {
-				defer group.Done()
+				defer syncGroup.Done()
 				if err := walkFunc(region, client); err != nil {
 					errs = append(errs, err...)
 				}
@@ -29,7 +29,8 @@ func (p *Provider) walk(client *gophercloud.ProviderClient, walkFunc func(region
 		}
 	}
 
-	group.Wait()
+	syncGroup.Wait()
+
 	return
 }
 

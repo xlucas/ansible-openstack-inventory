@@ -33,7 +33,6 @@ func rootCmdFunc(cmd *cobra.Command, args []string) {
 	if !list {
 		util.Die("invalid arguments", nil)
 	}
-
 	clouds, err := conf.ReadClouds()
 	if err != nil {
 		util.Die("failed to read clouds configuration", err)
@@ -47,6 +46,5 @@ func rootCmdFunc(cmd *cobra.Command, args []string) {
 	if err != nil {
 		util.Die("failed to build inventory", err)
 	}
-
 	fmt.Fprintln(os.Stdout, string(inventory))
 }

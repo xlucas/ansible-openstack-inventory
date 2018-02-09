@@ -4,8 +4,8 @@ import (
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 )
 
-func getIpAddress(srv servers.Server) string {
-	// Return access IP is set
+func getAnsibleHost(srv servers.Server) string {
+	// Return access IP if set
 	if srv.AccessIPv4 != "" {
 		return srv.AccessIPv4
 	}
@@ -42,4 +42,13 @@ func getIpAddress(srv servers.Server) string {
 
 	// Fallback to DNS
 	return srv.Name
+}
+
+func getAnsibleUser(provider *Provider, region *Region, srv servers.Server) string {
+	imageID := srv.Image["id"].(string)
+	image := region.images[imageID]
+	if v, ok := image.Metadata[provider.Options.Meta.User]; ok {
+		return v
+	}
+	return provider.Options.FallBackUser
 }

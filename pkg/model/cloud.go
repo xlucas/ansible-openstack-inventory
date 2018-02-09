@@ -16,8 +16,7 @@ func (c *Clouds) walk(walkFunc func(provider *Provider, client *gophercloud.Prov
 	for _, provider := range c.Providers {
 		client, err := provider.authenticate()
 		if err != nil {
-			errs = append(errs, err)
-			return
+			return append(errs, err)
 		}
 		if werrs := walkFunc(provider, client); werrs != nil {
 			errs = append(errs, werrs...)
@@ -54,28 +53,27 @@ func (c *Clouds) Refresh() []error {
 				Region: region.Name,
 			})
 			if err != nil {
-				errs = append(errs, err)
-				return
+				return append(errs, err)
 			}
-
 			jobs := []func(service *gophercloud.ServiceClient) error{
 				region.fetchImages,
 				region.fetchInstances,
 			}
 
-			var group = new(sync.WaitGroup)
+			syncGroup := new(sync.WaitGroup)
 
 			for _, j := range jobs {
-				group.Add(1)
+				syncGroup.Add(1)
 				go func(compute *gophercloud.ServiceClient, job func(service *gophercloud.ServiceClient) error) {
-					defer group.Done()
+					defer syncGroup.Done()
 					if err := job(compute); err != nil {
 						errs = append(errs, err)
 					}
 				}(c, j)
 			}
 
-			group.Wait()
+			syncGroup.Wait()
+
 			return
 		})
 	})

@@ -2,10 +2,8 @@ package model
 
 import (
 	"encoding/json"
-	"sync"
 
 	"github.com/rackspace/gophercloud"
-	"github.com/rackspace/gophercloud/openstack"
 )
 
 type Clouds struct {
@@ -49,32 +47,7 @@ func (c *Clouds) BuildInventory() ([]byte, error) {
 func (c *Clouds) Refresh() []error {
 	return c.walk(func(provider *Provider, client *gophercloud.ProviderClient) []error {
 		return provider.walk(client, func(region *Region, client *gophercloud.ProviderClient) (errs []error) {
-			c, err := openstack.NewComputeV2(client, gophercloud.EndpointOpts{
-				Region: region.Name,
-			})
-			if err != nil {
-				return append(errs, err)
-			}
-			jobs := []func(service *gophercloud.ServiceClient) error{
-				region.fetchImages,
-				region.fetchInstances,
-			}
-
-			syncGroup := new(sync.WaitGroup)
-
-			for _, j := range jobs {
-				syncGroup.Add(1)
-				go func(compute *gophercloud.ServiceClient, job func(service *gophercloud.ServiceClient) error) {
-					defer syncGroup.Done()
-					if err := job(compute); err != nil {
-						errs = append(errs, err)
-					}
-				}(c, j)
-			}
-
-			syncGroup.Wait()
-
-			return
+			return region.update(client)
 		})
 	})
 }

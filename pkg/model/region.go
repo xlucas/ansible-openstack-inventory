@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/rackspace/gophercloud"
+	"github.com/rackspace/gophercloud/openstack"
 	"github.com/rackspace/gophercloud/openstack/compute/v2/images"
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 	"github.com/rackspace/gophercloud/pagination"
@@ -24,6 +25,20 @@ func newActiveInstanceFilter() *servers.ListOpts {
 	return &servers.ListOpts{
 		Status: "ACTIVE",
 	}
+}
+
+func (r *Region) update(client *gophercloud.ProviderClient) (errs []error) {
+	c, err := openstack.NewComputeV2(client, gophercloud.EndpointOpts{
+		Region: r.Name,
+	})
+	if err != nil {
+		return append(errs, err)
+	}
+	jobs := []func(service *gophercloud.ServiceClient) error{
+		r.fetchImages,
+		r.fetchInstances,
+	}
+	return util.RunJobs(c, jobs)
 }
 
 func (r *Region) fetchInstances(compute *gophercloud.ServiceClient) error {

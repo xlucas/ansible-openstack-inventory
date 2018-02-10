@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
@@ -9,13 +10,13 @@ import (
 func addToGroups(p *Provider, rg *RegionGroup, r *Region, s servers.Server, inventory map[string]interface{}) {
 	defaultGroups := []string{p.Name, rg.Name, r.Name}
 	definedGroups := getDefinedGroups(p, s)
-	for _, group := range append(defaultGroups, definedGroups...) {
+	for _, group := range expandGroups(defaultGroups, definedGroups) {
 		hostAdd(inventory, group, s.Name)
 	}
 }
 
 func addToVars(p *Provider, rg *RegionGroup, r *Region, s servers.Server, inventory map[string]interface{}) {
-	hostVarsAdd(inventory, p, r, s)
+	hostVarsAdd(inventory, p, rg, r, s)
 }
 
 func getDefinedGroups(p *Provider, srv servers.Server) []string {
@@ -23,6 +24,16 @@ func getDefinedGroups(p *Provider, srv servers.Server) []string {
 		return strings.Split(metaValue.(string), ",")
 	}
 	return nil
+}
+
+func expandGroups(defaultGroups, definedGroups []string) (groups []string) {
+	groups = append(defaultGroups, definedGroups...)
+	for _, definedGroup := range definedGroups {
+		for _, defaultGroup := range defaultGroups {
+			groups = append(groups, fmt.Sprintf("%s_%s", defaultGroup, definedGroup))
+		}
+	}
+	return
 }
 
 func initHostVars(inventory map[string]interface{}) {

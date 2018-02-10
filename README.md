@@ -20,8 +20,9 @@ Below is a sample content for [OVH Cloud](https://www.ovhcloud.com):
 provider "ovh" {
   options {
     meta {
-      user   = "image_original_user" // image metadata used to guess ssh user
-      groups = "groups"              // server metadata used to define groups
+      user            = "image_original_user" // image metadata used to guess ssh user
+      groups          = "ansible_groups"      // server metadata used to define groups
+      hostvars_prefix = "hostvars_"           // server metadata to be added to hostvars
     }
 
     fallback_user = "debian" // ssh user to fall back to if metadata is missing

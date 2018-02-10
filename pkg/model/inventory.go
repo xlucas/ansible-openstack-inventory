@@ -39,13 +39,22 @@ func hostAdd(inventory map[string]interface{}, group, host string) {
 	}
 }
 
-func hostVarsAdd(inventory map[string]interface{}, p *Provider, r *Region, srv servers.Server) {
+func hostVarsAdd(inventory map[string]interface{}, p *Provider, rg *RegionGroup, r *Region, srv servers.Server) {
 	if _, ok := inventory["_meta"]; !ok {
 		initHostVars(inventory)
 	}
-	hostvars := inventory["_meta"].(map[string]interface{})["hostvars"].(map[string]interface{})
-	hostvars[srv.Name] = map[string]interface{}{
+	vars := map[string]interface{}{
 		"ansible_host": getAnsibleHost(srv),
 		"ansible_user": getAnsibleUser(p, r, srv),
+		"provider":     p.Name,
+		"region_label": r.Label,
+		"region_name":  r.Name,
+		"region_group": rg.Name,
 	}
+	for k, v := range srv.Metadata {
+		if strings.HasPrefix(k, p.Options.Meta.HostVarsPrefix) {
+			vars[strings.TrimPrefix(k, p.Options.Meta.HostVarsPrefix)] = v
+		}
+	}
+	inventory["_meta"].(map[string]interface{})["hostvars"].(map[string]interface{})[srv.Name] = vars
 }

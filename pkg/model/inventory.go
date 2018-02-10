@@ -11,7 +11,7 @@ func addToGroups(p *Provider, rg *RegionGroup, r *Region, s servers.Server, inve
 	defaultGroups := []string{p.Name, rg.Name, r.Name}
 	definedGroups := getDefinedGroups(p, s)
 	for _, group := range expandGroups(defaultGroups, definedGroups) {
-		hostAdd(inventory, group, s.Name)
+		hostAdd(inventory, group, s.ID)
 	}
 }
 
@@ -67,5 +67,5 @@ func hostVarsAdd(inventory map[string]interface{}, p *Provider, rg *RegionGroup,
 			vars[strings.TrimPrefix(k, p.Options.Meta.HostVarsPrefix)] = v
 		}
 	}
-	inventory["_meta"].(map[string]interface{})["hostvars"].(map[string]interface{})[srv.Name] = vars
+	inventory["_meta"].(map[string]interface{})["hostvars"].(map[string]interface{})[srv.ID] = vars
 }

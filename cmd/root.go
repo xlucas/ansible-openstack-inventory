@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/xlucas/ansible-openstack-inventory/pkg/conf"
+	"github.com/xlucas/ansible-openstack-inventory/conf"
 	"github.com/xlucas/ansible-openstack-inventory/pkg/util"
 )
 

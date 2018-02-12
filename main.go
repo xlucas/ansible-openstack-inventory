@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/xlucas/ansible-openstack-inventory/pkg/cmd"
+	"github.com/xlucas/ansible-openstack-inventory/cmd"
 	"github.com/xlucas/ansible-openstack-inventory/pkg/util"
 )
 

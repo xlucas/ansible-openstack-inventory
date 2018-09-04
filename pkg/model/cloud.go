@@ -25,13 +25,18 @@ func (c *Clouds) walk(walkFunc func(provider *Provider, client *gophercloud.Prov
 
 // BuildInventory constructs the ansible inventory and returns it as raw json
 // bytes.
-func (c *Clouds) BuildInventory() ([]byte, error) {
+func (c *Clouds) BuildInventory(targetEnv string) ([]byte, error) {
 	inventory := make(map[string]interface{})
 
 	for _, p := range c.Providers {
 		for _, rg := range p.RegionGroups {
 			for _, r := range rg.Regions {
 				for _, i := range r.instances {
+					env, ok := i.Metadata[p.Options.Meta.Env]
+					if !ok && targetEnv != "" ||
+						ok && env != targetEnv {
+						continue
+					}
 					addToGroups(p, rg, r, i, inventory)
 					addToVars(p, rg, r, i, inventory)
 				}

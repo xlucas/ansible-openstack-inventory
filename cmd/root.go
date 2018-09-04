@@ -10,6 +10,7 @@ import (
 )
 
 var (
+	env  string
 	list bool
 )
 
@@ -24,6 +25,7 @@ func newRootCmd() *cobra.Command {
 		Run:   rootCmdFunc,
 	}
 
+	c.PersistentFlags().StringVar(&env, "env", "", "Environment to build the inventory for")
 	c.PersistentFlags().BoolVar(&list, "list", false, "Produces the inventory")
 
 	return c
@@ -42,7 +44,7 @@ func rootCmdFunc(cmd *cobra.Command, args []string) {
 		util.PrintErrors(errs)
 		util.Die("failed to refresh host list", nil)
 	}
-	inventory, err := clouds.BuildInventory()
+	inventory, err := clouds.BuildInventory(env)
 	if err != nil {
 		util.Die("failed to build inventory", err)
 	}

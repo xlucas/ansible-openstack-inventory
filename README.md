@@ -95,8 +95,8 @@ Ansible configuration structure:
 └── playbook.yml
 ```
 
-The `hosts` at the root of the directory is a simple script that is used to
-invoke the dynamic inventory with the desired environment. Other inventories
+The `hosts` file at the root of the directory is a simple script that is used
+to invoke the dynamic inventory with the desired environment. Other inventories
 are simple symlinks to this script. Its content is:
 
 ```bash
@@ -115,7 +115,7 @@ specified on the command line:
 inventory = ./environments/dev
 ```
 
-Check that only instances from the dev environment are targeted when no
+Check that only instances from the development environment are targeted when no
 inventory has been specified:
 ```
 ansible -m ping all
@@ -134,7 +134,8 @@ b7bd2783-0082-4a4e-997d-00472c6dc940 | SUCCESS => {
 }
 ```
 
-Notice these hosts are different since they pertain to different environments.
+Notice how these hosts are different since they pertain to different
+environments.
 
 ## Usage without environments
 

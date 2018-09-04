@@ -145,3 +145,7 @@ and omit the `env` parameter in the metadata section.
 [defaults]
 inventory = /path/to/ansible-openstack-inventory
 ```
+
+# License
+
+This project is distributed under the Apache License, Version 2.0.

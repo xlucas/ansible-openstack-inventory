@@ -5,7 +5,7 @@ An opinionated dynamic inventory for openstack clouds that integrates environmen
 ## Installation
 
 ```bash
-go get github.com/xlucas/ansible-openstack-inventory
+go get -u github.com/xlucas/ansible-openstack-inventory
 ```
 
 ## Usage
@@ -20,9 +20,9 @@ Below is a sample content for [OVH Cloud](https://www.ovhcloud.com):
 provider "ovh" {
   options {
     meta {
-      env             = "ansible_environment" // server metadata used to define environments
+      environment     = "ansible_environment" // server metadata used to define environments
       groups          = "ansible_groups"      // server metadata used to define groups
-      hostvars_prefix = "hostvars_"           // server metadata to be added to hostvars
+      hostvars_prefix = "ansible_hostvar_"    // server metadata to be added to hostvars
       user            = "image_original_user" // image metadata used to guess ssh user
     }
 
@@ -77,7 +77,7 @@ containing environment-specific configuration in your ansible setup
 
 ### Example
 
-Ansible configuration structure:
+Ansible layout:
 
 ```text
 .
@@ -85,10 +85,16 @@ Ansible configuration structure:
 ├── hosts
 ├── environments
 │   ├── dev
+│   │   ├── group_vars
+│   │   │   └── ...
 │   │   └── hosts -> ../../hosts
 │   ├── preprod
+│   │   ├── group_vars
+│   │   │   └── ...
 │   │   └── hosts -> ../../hosts
 │   └── prod
+│       ├── group_vars
+│       │   └── ...
 │       └── hosts -> ../../hosts
 ├── roles
 │   └── ...
@@ -101,7 +107,7 @@ are simple symlinks to this script. Its content is:
 
 ```bash
 #!/bin/sh
-dir=${$0%/*}
+dir=${0%/*}
 env=${dir##*/}
 
 ansible-openstack-inventory --env=$env ${@}

@@ -37,5 +37,5 @@ func (i Identity) getAuthOpts() gophercloud.AuthOptions {
 		}
 	}
 
-	panic(fmt.Sprintf("unhandled identity version '%s'", i.Version))
+	panic(fmt.Sprintf("unhandled identity version '%d'", i.Version))
 }

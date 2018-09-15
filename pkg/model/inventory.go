@@ -55,8 +55,8 @@ func hostVarsAdd(inventory map[string]interface{}, p *Provider, rg *RegionGroup,
 		initHostVars(inventory)
 	}
 	vars := map[string]interface{}{
-		"ansible_host": getAnsibleHost(srv),
-		"ansible_user": getAnsibleUser(p, r, srv),
+		"ansible_host": GetAnsibleHost(srv),
+		"ansible_user": GetAnsibleUser(&p.Options, r.images, srv),
 		"provider":     p.Name,
 		"region_label": r.Label,
 		"region_name":  r.Name,

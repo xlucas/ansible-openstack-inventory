@@ -1,10 +1,11 @@
 package model
 
 import (
+	"github.com/rackspace/gophercloud/openstack/compute/v2/images"
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 )
 
-func getAnsibleHost(srv servers.Server) string {
+func GetAnsibleHost(srv servers.Server) string {
 	// Return access IP if set
 	if srv.AccessIPv4 != "" {
 		return srv.AccessIPv4
@@ -44,11 +45,11 @@ func getAnsibleHost(srv servers.Server) string {
 	return srv.Name
 }
 
-func getAnsibleUser(provider *Provider, region *Region, srv servers.Server) string {
+func GetAnsibleUser(opts *Options, images map[string]images.Image, srv servers.Server) string {
 	imageID := srv.Image["id"].(string)
-	image := region.images[imageID]
-	if v, ok := image.Metadata[provider.Options.Meta.User]; ok {
+	image := images[imageID]
+	if v, ok := image.Metadata[opts.Meta.User]; ok {
 		return v
 	}
-	return provider.Options.FallBackUser
+	return opts.FallBackUser
 }

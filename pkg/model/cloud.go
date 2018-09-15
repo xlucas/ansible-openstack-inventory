@@ -10,18 +10,7 @@ type Clouds struct {
 	Providers []*Provider `hcl:"provider"`
 }
 
-func (c *Clouds) walk(walkFunc func(provider *Provider, client *gophercloud.ProviderClient) []error) (errs []error) {
-	for _, provider := range c.Providers {
-		client, err := provider.authenticate()
-		if err != nil {
-			return append(errs, err)
-		}
-		if werrs := walkFunc(provider, client); werrs != nil {
-			errs = append(errs, werrs...)
-		}
-	}
-	return
-}
+type WalkProvidersFn func(provider *Provider, client *gophercloud.ProviderClient) []error
 
 // BuildInventory constructs the ansible inventory and returns it as raw json
 // bytes.
@@ -51,8 +40,21 @@ func (c *Clouds) BuildInventory(targetEnv string) ([]byte, error) {
 // providers.
 func (c *Clouds) Refresh() []error {
 	return c.walk(func(provider *Provider, client *gophercloud.ProviderClient) []error {
-		return provider.walk(client, func(region *Region, client *gophercloud.ProviderClient) (errs []error) {
-			return region.update(client)
+		return provider.WalkRegions(client, func(region *Region, client *gophercloud.ProviderClient) (errs []error) {
+			return region.Update(client)
 		})
 	})
+}
+
+func (c *Clouds) walk(fn WalkProvidersFn) (errs []error) {
+	for _, provider := range c.Providers {
+		client, err := provider.Authenticate()
+		if err != nil {
+			return append(errs, err)
+		}
+		if werrs := fn(provider, client); werrs != nil {
+			errs = append(errs, werrs...)
+		}
+	}
+	return
 }

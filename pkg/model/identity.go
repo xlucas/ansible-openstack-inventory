@@ -16,7 +16,7 @@ type Identity struct {
 	Version    int    `hcl:"version"`
 }
 
-func (i Identity) getAuthOpts() gophercloud.AuthOptions {
+func (i Identity) GetAuthOpts() gophercloud.AuthOptions {
 	if i.Version == 2 {
 		return gophercloud.AuthOptions{
 			IdentityEndpoint: i.Endpoint + "/v2.0",

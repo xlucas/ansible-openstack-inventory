@@ -14,7 +14,15 @@ type Provider struct {
 	RegionGroups []*RegionGroup `hcl:"regions"`
 }
 
-func (p *Provider) walk(client *gophercloud.ProviderClient, walkFunc func(region *Region, client *gophercloud.ProviderClient) []error) (errs []error) {
+type WalkRegionsFn func(region *Region, client *gophercloud.ProviderClient) []error
+
+// Authenticate is used to authenticate to the identity endpoint.
+func (p Provider) Authenticate() (*gophercloud.ProviderClient, error) {
+	return openstack.AuthenticatedClient(p.Identity.GetAuthOpts())
+}
+
+// WalkRegions is used to run fn for each region.
+func (p *Provider) WalkRegions(client *gophercloud.ProviderClient, fn WalkRegionsFn) (errs []error) {
 	syncGroup := new(sync.WaitGroup)
 
 	for _, rg := range p.RegionGroups {
@@ -22,7 +30,7 @@ func (p *Provider) walk(client *gophercloud.ProviderClient, walkFunc func(region
 			syncGroup.Add(1)
 			go func(region *Region) {
 				defer syncGroup.Done()
-				if err := walkFunc(region, client); err != nil {
+				if err := fn(region, client); err != nil {
 					errs = append(errs, err...)
 				}
 			}(r)
@@ -32,8 +40,4 @@ func (p *Provider) walk(client *gophercloud.ProviderClient, walkFunc func(region
 	syncGroup.Wait()
 
 	return
-}
-
-func (p Provider) authenticate() (*gophercloud.ProviderClient, error) {
-	return openstack.AuthenticatedClient(p.Identity.getAuthOpts())
 }

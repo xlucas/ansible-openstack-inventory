@@ -27,21 +27,25 @@ func newActiveInstanceFilter() *servers.ListOpts {
 	}
 }
 
-func (r *Region) update(client *gophercloud.ProviderClient) (errs []error) {
-	c, err := openstack.NewComputeV2(client, gophercloud.EndpointOpts{
-		Region: r.Name,
-	})
-	if err != nil {
-		return append(errs, err)
+func (r *Region) FetchImages(compute *gophercloud.ServiceClient) error {
+	var imgs = make(map[string]images.Image)
+
+	err := images.ListDetail(compute, images.ListOpts{}).EachPage(
+		func(page pagination.Page) (bool, error) {
+			if perr := util.AppendImagePage(page, imgs); perr != nil {
+				return false, perr
+			}
+			return true, nil
+		},
+	)
+	if err == nil {
+		r.images = imgs
 	}
-	jobs := []func(service *gophercloud.ServiceClient) error{
-		r.fetchImages,
-		r.fetchInstances,
-	}
-	return util.RunJobs(c, jobs)
+
+	return err
 }
 
-func (r *Region) fetchInstances(compute *gophercloud.ServiceClient) error {
+func (r *Region) FetchInstances(compute *gophercloud.ServiceClient) error {
 	var instances []servers.Server
 
 	err := servers.List(compute, newActiveInstanceFilter()).EachPage(
@@ -59,20 +63,16 @@ func (r *Region) fetchInstances(compute *gophercloud.ServiceClient) error {
 	return err
 }
 
-func (r *Region) fetchImages(compute *gophercloud.ServiceClient) error {
-	var imgs = make(map[string]images.Image)
-
-	err := images.ListDetail(compute, images.ListOpts{}).EachPage(
-		func(page pagination.Page) (bool, error) {
-			if perr := util.AppendImagePage(page, imgs); perr != nil {
-				return false, perr
-			}
-			return true, nil
-		},
-	)
-	if err == nil {
-		r.images = imgs
+func (r *Region) Update(client *gophercloud.ProviderClient) (errs []error) {
+	c, err := openstack.NewComputeV2(client, gophercloud.EndpointOpts{
+		Region: r.Name,
+	})
+	if err != nil {
+		return append(errs, err)
 	}
-
-	return err
+	jobs := []func(service *gophercloud.ServiceClient) error{
+		r.FetchImages,
+		r.FetchInstances,
+	}
+	return util.RunJobs(c, jobs)
 }

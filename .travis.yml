@@ -10,8 +10,7 @@ install:
   - go get github.com/mattn/goveralls
 script:
   - go get -t -v ./...
-  - diff -u <(echo -n) <(gofmt -d -s .)
-  - go tool vet .
+  - diff -u <(echo -n) <(gofmt -d -s `go list -f "{{range .GoFiles}}{{$.Dir}}/{{.}} {{end}}" ./...`)
   - go test -v ./...
   - go test -coverprofile=profile.cov ./...
   - goveralls -coverprofile=profile.cov -service=travis-ci

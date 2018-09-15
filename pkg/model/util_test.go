@@ -71,7 +71,7 @@ func TestGetAnsibleUserWithMeta(t *testing.T) {
 		FallBackUser: "admin",
 	}
 	images := map[string]images.Image{
-		"20c5dc91-5a62-4fc2-a122-eeadaadfdf49": images.Image{
+		"20c5dc91-5a62-4fc2-a122-eeadaadfdf49": {
 			Metadata: map[string]string{
 				"image_original_user": "core",
 			},
@@ -93,7 +93,7 @@ func TestGetAnsibleUserWithoutMeta(t *testing.T) {
 		FallBackUser: "admin",
 	}
 	images := map[string]images.Image{
-		"7b04eb30-f468-4da4-92a9-25d93a1914c1": images.Image{
+		"7b04eb30-f468-4da4-92a9-25d93a1914c1": {
 			Metadata: make(map[string]string),
 		},
 	}

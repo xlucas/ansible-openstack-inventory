@@ -59,7 +59,7 @@ func TestReadClouds(t *testing.T) {
 	actual, err := ReadClouds()
 	expected := &model.Clouds{
 		Providers: []*model.Provider{
-			&model.Provider{
+			{
 				Name: "acme",
 				Identity: model.Identity{
 					Endpoint: "https://keystone.acme.com",
@@ -78,19 +78,19 @@ func TestReadClouds(t *testing.T) {
 					FallBackUser: "admin",
 				},
 				RegionGroups: []*model.RegionGroup{
-					&model.RegionGroup{
+					{
 						Name: "eu-east",
 						Regions: []*model.Region{
-							&model.Region{
+							{
 								Label: "EasternCity",
 								Name:  "east-1",
 							},
 						},
 					},
-					&model.RegionGroup{
+					{
 						Name: "eu-west",
 						Regions: []*model.Region{
-							&model.Region{
+							{
 								Label: "WesternCity",
 								Name:  "west-1",
 							},

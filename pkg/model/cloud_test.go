@@ -30,8 +30,8 @@ func monkeyPatchImageFetching() {
 	t := reflect.TypeOf(&Region{})
 	monkey.PatchInstanceMethod(t, "FetchImages", func(r *Region, compute *gophercloud.ServiceClient) error {
 		r.images = map[string]images.Image{
-			"7b04eb30-f468-4da4-92a9-25d93a1914c1": images.Image{},
-			"20c5dc91-5a62-4fc2-a122-eeadaadfdf49": images.Image{
+			"7b04eb30-f468-4da4-92a9-25d93a1914c1": {},
+			"20c5dc91-5a62-4fc2-a122-eeadaadfdf49": {
 				Name: "CoreOS",
 				Metadata: map[string]string{
 					"image_original_user": "core",
@@ -46,7 +46,7 @@ func monkeyPatchServerFetching() {
 	t := reflect.TypeOf(&Region{})
 	monkey.PatchInstanceMethod(t, "FetchInstances", func(r *Region, compute *gophercloud.ServiceClient) error {
 		r.instances = []servers.Server{
-			servers.Server{
+			{
 				Name:       "web-1",
 				AccessIPv4: "130.155.5.7",
 				ID:         "0f47385f-2be6-426c-b45f-5b05db68dd11",
@@ -59,7 +59,7 @@ func monkeyPatchServerFetching() {
 					"ansible_hostvar_ssl": "true",
 				},
 			},
-			servers.Server{
+			{
 				Name:       "web-2",
 				ID:         "f9c33aae-e54a-4ca7-96f8-167f990fd75e",
 				AccessIPv6: "481b:a820:6afip1:fa86:b904:88d9:9a0b:9faf",
@@ -85,7 +85,7 @@ func TestBuildInventory(t *testing.T) {
 
 	clouds := &Clouds{
 		Providers: []*Provider{
-			&Provider{
+			{
 				Name: "acme",
 				Identity: Identity{
 					Endpoint: "https://keystone.acme.com",
@@ -104,10 +104,10 @@ func TestBuildInventory(t *testing.T) {
 					FallBackUser: "admin",
 				},
 				RegionGroups: []*RegionGroup{
-					&RegionGroup{
+					{
 						Name: "eu-east",
 						Regions: []*Region{
-							&Region{
+							{
 								Label: "EasternCity",
 								Name:  "east-1",
 							},

@@ -1,5 +1,8 @@
 # ansible-openstack-inventory
 
+[![Build Status](https://travis-ci.org/xlucas/ansible-openstack-inventory.svg?branch=master)](https://travis-ci.org/xlucas/ansible-openstack-inventory)
+[![Coverage Status](https://coveralls.io/repos/github/xlucas/ansible-openstack-inventory/badge.svg?branch=travis-ci)](https://coveralls.io/github/xlucas/ansible-openstack-inventory?branch=travis-ci)
+
 An opinionated dynamic inventory for openstack clouds that integrates environment filtering.
 
 ## Installation
@@ -66,13 +69,14 @@ provider "ovh" {
 ```
 
 ## Usage with environments
+
 - In the configuration file, make sure you have specified the `env` key in the
   `meta` section. This value represents the key that the dynamic inventory will
-look for when building the environment host list.
+  look for when building the environment host list.
 - Make sure your instances are created with the previous metadata key and the
   environment name as a value. It should be the same name than the folder
-containing environment-specific configuration in your ansible setup
-(`environments/<env>`).
+  containing environment-specific configuration in your ansible setup
+  (`environments/<env>`).
 - Make sure the inventory for each environment is invoked with `--env=<env>`.
 
 ### Example
@@ -123,6 +127,7 @@ inventory = ./environments/dev
 
 Check that only instances from the development environment are targeted when no
 inventory has been specified:
+
 ```
 ansible -m ping all
 4b7ae578-bf37-4179-b324-9fad1b1d78ad | SUCCESS => {
@@ -132,6 +137,7 @@ ansible -m ping all
 ```
 
 Run the same command for a specific environment, for instance preproduction:
+
 ```
 ansible -i environments/preprod -m ping all
 b7bd2783-0082-4a4e-997d-00472c6dc940 | SUCCESS => {
@@ -147,6 +153,7 @@ environments.
 
 Simply configure ansible to use it as the default inventory in `ansible.cfg`
 and omit the `env` parameter in the metadata section.
+
 ```ini
 [defaults]
 inventory = /path/to/ansible-openstack-inventory

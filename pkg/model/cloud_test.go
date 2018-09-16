@@ -13,7 +13,7 @@ import (
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 )
 
-func monkeyPatchGopherCloud() {
+func monkeyPatchGopherCloud() *monkey.PatchGuard {
 	monkey.Patch(openstack.AuthenticatedClient, func(opts gophercloud.AuthOptions) (*gophercloud.ProviderClient, error) {
 		client := &gophercloud.ProviderClient{
 			IdentityEndpoint: "https://keystone.acme.com",
@@ -21,14 +21,14 @@ func monkeyPatchGopherCloud() {
 		}
 		return client, nil
 	})
-	monkey.Patch(openstack.NewComputeV2, func(client *gophercloud.ProviderClient, opts gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
+	return monkey.Patch(openstack.NewComputeV2, func(client *gophercloud.ProviderClient, opts gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
 		return &gophercloud.ServiceClient{}, nil
 	})
 }
 
-func monkeyPatchImageFetching() {
+func monkeyPatchImageFetching() *monkey.PatchGuard {
 	t := reflect.TypeOf(&Region{})
-	monkey.PatchInstanceMethod(t, "FetchImages", func(r *Region, compute *gophercloud.ServiceClient) error {
+	return monkey.PatchInstanceMethod(t, "FetchImages", func(r *Region, compute *gophercloud.ServiceClient) error {
 		r.images = map[string]images.Image{
 			"7b04eb30-f468-4da4-92a9-25d93a1914c1": {},
 			"20c5dc91-5a62-4fc2-a122-eeadaadfdf49": {
@@ -42,9 +42,9 @@ func monkeyPatchImageFetching() {
 	})
 }
 
-func monkeyPatchServerFetching() {
+func monkeyPatchServerFetching() *monkey.PatchGuard {
 	t := reflect.TypeOf(&Region{})
-	monkey.PatchInstanceMethod(t, "FetchInstances", func(r *Region, compute *gophercloud.ServiceClient) error {
+	return monkey.PatchInstanceMethod(t, "FetchInstances", func(r *Region, compute *gophercloud.ServiceClient) error {
 		r.instances = []servers.Server{
 			{
 				Name:       "web-1",
@@ -56,7 +56,7 @@ func monkeyPatchServerFetching() {
 				Metadata: map[string]interface{}{
 					"ansible_environment": "production",
 					"ansible_groups":      "hardened,web",
-					"ansible_hostvar_ssl": "true",
+					"ansible_hostvar_tls": "true",
 				},
 			},
 			{
@@ -69,7 +69,7 @@ func monkeyPatchServerFetching() {
 				Metadata: map[string]interface{}{
 					"ansible_environment": "production",
 					"ansible_groups":      "hardened,web",
-					"ansible_hostvar_ssl": "true",
+					"ansible_hostvar_tls": "true",
 				},
 			},
 		}
@@ -79,9 +79,9 @@ func monkeyPatchServerFetching() {
 }
 
 func TestBuildInventory(t *testing.T) {
-	monkeyPatchGopherCloud()
-	monkeyPatchImageFetching()
-	monkeyPatchServerFetching()
+	defer monkeyPatchGopherCloud().Unpatch()
+	defer monkeyPatchImageFetching().Unpatch()
+	defer monkeyPatchServerFetching().Unpatch()
 
 	clouds := &Clouds{
 		Providers: []*Provider{
@@ -135,7 +135,7 @@ func TestBuildInventory(t *testing.T) {
 			"region_group": "eu-east",
 			"region_label": "EasternCity",
 			"region_name": "east-1",
-			"ssl": "true"
+			"tls": "true"
 		  },
 		  "f9c33aae-e54a-4ca7-96f8-167f990fd75e": {
 			"ansible_host": "481b:a820:6afip1:fa86:b904:88d9:9a0b:9faf",
@@ -144,7 +144,7 @@ func TestBuildInventory(t *testing.T) {
 			"region_group": "eu-east",
 			"region_label": "EasternCity",
 			"region_name": "east-1",
-			"ssl": "true"
+			"tls": "true"
 		  }
 		}
 	  },

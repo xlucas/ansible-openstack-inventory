@@ -40,7 +40,7 @@ func TestGetAuthOptionsIdentityV3(t *testing.T) {
 		Username:         identity.Username,
 		Password:         identity.Password,
 		TenantID:         identity.ProjectID,
-		DomainName:       "acme",
+		DomainName:       identity.DomainName,
 		AllowReauth:      true,
 	}
 	assert.EqualValues(t, expected, identity.GetAuthOpts())

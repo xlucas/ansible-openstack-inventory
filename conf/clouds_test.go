@@ -1,9 +1,12 @@
 package conf
 
 import (
+	"errors"
 	"io/ioutil"
+	"os"
 	"testing"
 
+	"github.com/hashicorp/hcl"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/xlucas/ansible-openstack-inventory/pkg/model"
@@ -11,50 +14,48 @@ import (
 	"bou.ke/monkey"
 )
 
-func monkeyPatchReadFile() {
+func monkeyPatchReadFile() *monkey.PatchGuard {
 	config := `
 	provider "acme" {
-		options {
-		  meta {
-			environment     = "ansible_environment"
-			user            = "image_original_user"
-			groups          = "ansible_groups"
-			hostvars_prefix = "ansible_hostvar_"
-		  }
-	  
-		  fallback_user = "admin"
+	  options {
+	    meta {
+		  environment     = "ansible_environment"
+		  groups          = "ansible_groups"
+		  hostvars_prefix = "ansible_hostvar_"
+		  user            = "image_original_user"
 		}
+		
+		fallback_user = "admin"
+	  }
 	  
-		identity {
-		  version   = 2
-		  endpoint  = "https://keystone.acme.com"
-		  username  = "BpcRBmKbj1gY"
-		  password  = "vxWNRLiagH8aEjxA"
-		  tenant_id = "sfgAc5sN3LZUhm2Uho8Sreo0qbUPq8Cd"
-		}
+	  identity {
+        version   = 2
+        endpoint  = "https://keystone.acme.com"
+        username  = "BpcRBmKbj1gY"
+        password  = "vxWNRLiagH8aEjxA"
+        tenant_id = "sfgAc5sN3LZUhm2Uho8Sreo0qbUPq8Cd"
+	  }
 	  
-		regions "eu-east" {
-		  region "EasternCity" {
-			name = "east-1"
-		  }
-		}
-	  
-		regions "eu-west" {
-		  region "WesternCity" {
-			name = "west-1"
-		  }
-		}
+      regions "eu-east" {
+        region "EasternCity" {
+          name = "east-1"
+        }
+      }
 
-	  }	  
+      regions "eu-west" {
+        region "WesternCity" {
+          name = "west-1"
+        }
+      }
+    }	  
 	`
-	monkey.Patch(ioutil.ReadFile, func(filename string) ([]byte, error) {
+	return monkey.Patch(ioutil.ReadFile, func(filename string) ([]byte, error) {
 		return []byte(config), nil
 	})
-
 }
 
 func TestReadClouds(t *testing.T) {
-	monkeyPatchReadFile()
+	defer monkeyPatchReadFile().Unpatch()
 
 	actual, err := ReadClouds()
 	expected := &model.Clouds{
@@ -103,4 +104,22 @@ func TestReadClouds(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.EqualValues(t, expected, actual)
+}
+
+func TestReadCloudsFileError(t *testing.T) {
+	defer monkey.Patch(ioutil.ReadFile, func(filename string) ([]byte, error) {
+		return nil, os.ErrNotExist
+	}).Unpatch()
+
+	_, err := ReadClouds()
+	assert.Error(t, err)
+}
+
+func TestReadCloudsInvalidHCL(t *testing.T) {
+	defer monkey.Patch(hcl.Decode, func(out interface{}, in string) error {
+		return errors.New("an error happened")
+	}).Unpatch()
+
+	_, err := ReadClouds()
+	assert.Error(t, err)
 }

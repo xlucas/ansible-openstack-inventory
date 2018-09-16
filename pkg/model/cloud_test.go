@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -13,17 +14,73 @@ import (
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 )
 
-func monkeyPatchGopherCloud() *monkey.PatchGuard {
-	monkey.Patch(openstack.AuthenticatedClient, func(opts gophercloud.AuthOptions) (*gophercloud.ProviderClient, error) {
-		client := &gophercloud.ProviderClient{
-			IdentityEndpoint: "https://keystone.acme.com",
-			TokenID:          "N28zrJhNSPSAs6piah5JF3dNXaybANi2",
-		}
-		return client, nil
-	})
-	return monkey.Patch(openstack.NewComputeV2, func(client *gophercloud.ProviderClient, opts gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
-		return &gophercloud.ServiceClient{}, nil
-	})
+func fakeClouds() *Clouds {
+	return &Clouds{
+		Providers: []*Provider{
+			{
+				Name: "acme",
+				Identity: Identity{
+					Endpoint: "https://keystone.acme.com",
+					Username: "BpcRBmKbj1gY",
+					Password: "vxWNRLiagH8aEjxA",
+					TenantID: "sfgAc5sN3LZUhm2Uho8Sreo0qbUPq8Cd",
+					Version:  2,
+				},
+				Options: Options{
+					Meta: Meta{
+						Env:            "ansible_environment",
+						Groups:         "ansible_groups",
+						HostVarsPrefix: "ansible_hostvar_",
+						User:           "image_original_user",
+					},
+					FallBackUser: "admin",
+				},
+				RegionGroups: []*RegionGroup{
+					{
+						Name: "eu-east",
+						Regions: []*Region{
+							{
+								Label: "EasternCity",
+								Name:  "east-1",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func monkeyPatchGopherCloudAuth() *monkey.PatchGuard {
+	return monkey.Patch(openstack.AuthenticatedClient,
+		func(opts gophercloud.AuthOptions) (*gophercloud.ProviderClient, error) {
+			client := &gophercloud.ProviderClient{
+				IdentityEndpoint: "https://keystone.acme.com",
+				TokenID:          "N28zrJhNSPSAs6piah5JF3dNXaybANi2",
+			}
+			return client, nil
+		})
+}
+
+func monkeyPatchGopherCloudAuthWithError() *monkey.PatchGuard {
+	return monkey.Patch(openstack.AuthenticatedClient,
+		func(opts gophercloud.AuthOptions) (*gophercloud.ProviderClient, error) {
+			return nil, errors.New("an error occured")
+		})
+}
+
+func monkeyPatchGopherCloudComputeClient() *monkey.PatchGuard {
+	return monkey.Patch(openstack.NewComputeV2,
+		func(client *gophercloud.ProviderClient, opts gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
+			return &gophercloud.ServiceClient{}, nil
+		})
+}
+
+func monkeyPatchGopherCloudComputeClientWithError() *monkey.PatchGuard {
+	return monkey.Patch(openstack.NewComputeV2,
+		func(client *gophercloud.ProviderClient, opts gophercloud.EndpointOpts) (*gophercloud.ServiceClient, error) {
+			return nil, errors.New("an error occured")
+		})
 }
 
 func monkeyPatchImageFetching() *monkey.PatchGuard {
@@ -79,50 +136,17 @@ func monkeyPatchServerFetching() *monkey.PatchGuard {
 }
 
 func TestBuildInventory(t *testing.T) {
-	defer monkeyPatchGopherCloud().Unpatch()
+	defer monkeyPatchGopherCloudAuth().Unpatch()
+	defer monkeyPatchGopherCloudComputeClient().Unpatch()
 	defer monkeyPatchImageFetching().Unpatch()
 	defer monkeyPatchServerFetching().Unpatch()
 
-	clouds := &Clouds{
-		Providers: []*Provider{
-			{
-				Name: "acme",
-				Identity: Identity{
-					Endpoint: "https://keystone.acme.com",
-					Username: "BpcRBmKbj1gY",
-					Password: "vxWNRLiagH8aEjxA",
-					TenantID: "sfgAc5sN3LZUhm2Uho8Sreo0qbUPq8Cd",
-					Version:  2,
-				},
-				Options: Options{
-					Meta: Meta{
-						Env:            "ansible_environment",
-						Groups:         "ansible_groups",
-						HostVarsPrefix: "ansible_hostvar_",
-						User:           "image_original_user",
-					},
-					FallBackUser: "admin",
-				},
-				RegionGroups: []*RegionGroup{
-					{
-						Name: "eu-east",
-						Regions: []*Region{
-							{
-								Label: "EasternCity",
-								Name:  "east-1",
-							},
-						},
-					},
-				},
-			},
-		},
-	}
+	clouds := fakeClouds()
+	errs := clouds.Refresh()
+	assert.Empty(t, errs)
 
-	err := clouds.Refresh()
-	assert.Empty(t, err)
-
-	bytes, berr := clouds.BuildInventory("production")
-	assert.NoError(t, berr)
+	bytes, err := clouds.BuildInventory("production")
+	assert.NoError(t, err)
 
 	expected := `
 	{
@@ -195,4 +219,19 @@ func TestBuildInventory(t *testing.T) {
 	}`
 
 	assert.JSONEq(t, expected, string(bytes))
+}
+
+func TestRefreshWithAuthError(t *testing.T) {
+	defer monkeyPatchGopherCloudAuthWithError().Unpatch()
+	clouds := fakeClouds()
+	errs := clouds.Refresh()
+	assert.NotEmpty(t, errs)
+}
+
+func TestRefreshWithUpdateError(t *testing.T) {
+	defer monkeyPatchGopherCloudAuth().Unpatch()
+	defer monkeyPatchGopherCloudComputeClientWithError().Unpatch()
+	clouds := fakeClouds()
+	errs := clouds.Refresh()
+	assert.NotEmpty(t, errs)
 }

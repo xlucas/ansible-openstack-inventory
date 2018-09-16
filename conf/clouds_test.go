@@ -6,6 +6,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/mitchellh/go-homedir"
+
 	"github.com/hashicorp/hcl"
 	"github.com/stretchr/testify/assert"
 
@@ -106,20 +108,26 @@ func TestReadClouds(t *testing.T) {
 	assert.EqualValues(t, expected, actual)
 }
 
+func TestReadCloudsExpandHomeError(t *testing.T) {
+	defer monkey.Patch(homedir.Expand, func(path string) (string, error) {
+		return "", errors.New("an error occured")
+	}).Unpatch()
+	_, err := ReadClouds()
+	assert.Error(t, err)
+}
+
 func TestReadCloudsFileError(t *testing.T) {
 	defer monkey.Patch(ioutil.ReadFile, func(filename string) ([]byte, error) {
 		return nil, os.ErrNotExist
 	}).Unpatch()
-
 	_, err := ReadClouds()
 	assert.Error(t, err)
 }
 
 func TestReadCloudsInvalidHCL(t *testing.T) {
 	defer monkey.Patch(hcl.Decode, func(out interface{}, in string) error {
-		return errors.New("an error happened")
+		return errors.New("an error occured")
 	}).Unpatch()
-
 	_, err := ReadClouds()
 	assert.Error(t, err)
 }

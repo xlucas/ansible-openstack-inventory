@@ -1,7 +1,7 @@
 # ansible-openstack-inventory
 
 [![Build Status](https://travis-ci.org/xlucas/ansible-openstack-inventory.svg?branch=master)](https://travis-ci.org/xlucas/ansible-openstack-inventory)
-[![Coverage Status](https://coveralls.io/repos/github/xlucas/ansible-openstack-inventory/badge.svg?branch=master)](https://coveralls.io/github/xlucas/ansible-openstack-inventory?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/xlucas/ansible-openstack-inventory/badge.svg?branch=master&service=github)](https://coveralls.io/github/xlucas/ansible-openstack-inventory?branch=master)
 
 An opinionated dynamic inventory for openstack clouds that integrates environment filtering.
 

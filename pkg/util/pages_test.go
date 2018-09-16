@@ -4,13 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/rackspace/gophercloud/openstack/compute/v2/images"
-
-	"github.com/stretchr/testify/assert"
-
 	"bou.ke/monkey"
+
+	"github.com/rackspace/gophercloud/openstack/compute/v2/images"
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
 	"github.com/rackspace/gophercloud/pagination"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAppendImagePage(t *testing.T) {

@@ -3,10 +3,9 @@ package model
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/rackspace/gophercloud/openstack/compute/v2/images"
 	"github.com/rackspace/gophercloud/openstack/compute/v2/servers"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetAnsibleHostFromAccessIPv4(t *testing.T) {

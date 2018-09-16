@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/rackspace/gophercloud"
-
 	"github.com/stretchr/testify/assert"
 )
 

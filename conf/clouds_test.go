@@ -6,14 +6,12 @@ import (
 	"os"
 	"testing"
 
-	"github.com/mitchellh/go-homedir"
+	"bou.ke/monkey"
 
 	"github.com/hashicorp/hcl"
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/xlucas/ansible-openstack-inventory/pkg/model"
-
-	"bou.ke/monkey"
 )
 
 func monkeyPatchReadFile() *monkey.PatchGuard {

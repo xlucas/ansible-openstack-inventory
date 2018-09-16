@@ -4,9 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/rackspace/gophercloud"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRunJobs(t *testing.T) {

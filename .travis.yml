@@ -1,16 +1,22 @@
 language: go
+
 go:
   - tip
+
 matrix:
   allow_failures:
     - go: master
   fast_finish: true
+
 install:
   - go get golang.org/x/tools/cmd/cover
   - go get github.com/mattn/goveralls
+
 script:
   - go get -t -v ./...
   - diff -u <(echo -n) <(gofmt -d -s `go list -f "{{range .GoFiles}}{{$.Dir}}/{{.}} {{end}}" ./...`)
   - go test -v ./...
-  - go test -coverprofile=profile.cov ./...
-  - goveralls -coverprofile=profile.cov -service=travis-ci
+  - go test -coverprofile=coverage.txt ./...
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
